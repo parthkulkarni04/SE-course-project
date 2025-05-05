@@ -6,6 +6,10 @@ import { GiCoffeeBeans, GiCoffeeCup } from 'react-icons/gi';
 const ProductsManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Sample product data relevant to Sleepy Owl Coffee
   const products = [
@@ -18,7 +22,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 1845,
       rating: 4.8,
-      image: '/placeholder-coffee-bottle.jpg'
+      image: 'https://storage.googleapis.com/gen-atmedia/3/2018/05/9eada0d203bfb580d801b478edd553465c7afb52.jpeg'
     },
     { 
       id: 'P002', 
@@ -29,7 +33,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 1256,
       rating: 4.6,
-      image: '/placeholder-coffee-bottle.jpg'
+      image: 'https://shottbeverages.com/wp-content/uploads/2019/10/Hazelnut-Cold-Brew.jpg'
     },
     { 
       id: 'P003', 
@@ -40,7 +44,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 1342,
       rating: 4.7,
-      image: '/placeholder-coffee-bottle.jpg'
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSv3EetAlWkhQx1US0HZVs6BQIUjh34d05hCA&s'
     },
     { 
       id: 'P004', 
@@ -51,7 +55,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 785,
       rating: 4.9,
-      image: '/placeholder-coffee-beans.jpg'
+      image: 'https://cdn.shopify.com/s/files/1/0561/6071/4931/files/buy-coffee-beans.jpg?v=1708682330'
     },
     { 
       id: 'P005', 
@@ -62,7 +66,7 @@ const ProductsManagement = () => {
       status: 'Low Stock',
       sales: 842,
       rating: 4.8,
-      image: '/placeholder-coffee-beans.jpg'
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSuPcwlVtTijYK7CCX-DgwxQ0HTm7p_PF0keg&s'
     },
     { 
       id: 'P006', 
@@ -73,7 +77,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 1245,
       rating: 4.7,
-      image: '/placeholder-brew-bags.jpg'
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC3YBN8DCa7sk6mRjxzhSQJU_esOLGKRZACw&s'
     },
     { 
       id: 'P007', 
@@ -84,7 +88,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 328,
       rating: 4.6,
-      image: '/placeholder-french-press.jpg'
+      image: 'https://www.wonderchef.com/cdn/shop/files/6802363.jpg?v=1745669416'
     },
     { 
       id: 'P008', 
@@ -95,7 +99,7 @@ const ProductsManagement = () => {
       status: 'Low Stock',
       sales: 264,
       rating: 4.5,
-      image: '/placeholder-coffee-dripper.jpg'
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-U3fiq8fISxvQJ3A8aUMmLw1cXELY7nBEqA&s'
     },
     { 
       id: 'P009', 
@@ -106,7 +110,7 @@ const ProductsManagement = () => {
       status: 'Active',
       sales: 521,
       rating: 4.7,
-      image: '/placeholder-coffee-mug.jpg'
+      image: 'https://sleepyowl.co/cdn/shop/files/Ground_coffee_mug_1.jpg?v=1720175349'
     }
   ];
 
@@ -122,10 +126,32 @@ const ProductsManagement = () => {
   // Best selling products
   const bestSellers = products.sort((a, b) => b.sales - a.sales).slice(0, 3);
 
-  // Filter products based on active tab
-  const filteredProducts = activeTab === 'all' 
-    ? products 
-    : products.filter(product => product.category.toLowerCase() === activeTab.toLowerCase());
+  // Filter products based on active tab and search query
+  const filteredProducts = products
+    .filter(product => 
+      activeTab === 'all' || product.category.toLowerCase() === activeTab.toLowerCase()
+    )
+    .filter(product =>
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  const handleViewProduct = (product) => {
+    setSelectedProduct(product);
+    setShowViewModal(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setSelectedProduct(product);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteProduct = (product) => {
+    if (window.confirm(`Are you sure you want to delete ${product.name}?`)) {
+      // Here you would typically make an API call to delete the product
+      console.log('Deleting product:', product);
+    }
+  };
 
   return (
     <div className="container mx-auto pt-24 px-4 pb-8">
@@ -253,6 +279,8 @@ const ProductsManagement = () => {
                   type="text"
                   placeholder="Search products..."
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#c69f80] focus:border-transparent"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <div className="absolute left-3 top-2.5 text-gray-400">
                   <FaSearch />
@@ -295,16 +323,16 @@ const ProductsManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredProducts.map((product) => (
                 <tr key={product.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 bg-[#f8f0e7] rounded-md flex items-center justify-center overflow-hidden">
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col items-center">
+                      <div className="h-24 w-24 bg-[#f8f0e7] rounded-md flex items-center justify-center overflow-hidden mb-2">
                         {product.image ? (
-                          <img src={product.image} alt={product.name} className="h-10 w-10 object-cover" />
+                          <img src={product.image} alt={product.name} className="h-24 w-24 object-cover" />
                         ) : (
-                          <FaCoffee className="text-[#8c6d5c] text-xl" />
+                          <FaCoffee className="text-[#8c6d5c] text-3xl" />
                         )}
                       </div>
-                      <div className="ml-4">
+                      <div className="text-center">
                         <div className="text-sm font-medium text-gray-900">{product.name}</div>
                         <div className="text-xs text-gray-500">ID: {product.id}</div>
                       </div>
@@ -336,13 +364,22 @@ const ProductsManagement = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
+                    <button 
+                      onClick={() => handleViewProduct(product)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    >
                       <FaEye />
                     </button>
-                    <button className="text-[#8c6d5c] hover:text-[#5c4434] mr-3">
+                    <button 
+                      onClick={() => handleEditProduct(product)}
+                      className="text-[#8c6d5c] hover:text-[#5c4434] mr-3"
+                    >
                       <FaPencilAlt />
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
+                    <button 
+                      onClick={() => handleDeleteProduct(product)}
+                      className="text-red-600 hover:text-red-900"
+                    >
                       <FaTrash />
                     </button>
                   </td>
@@ -352,6 +389,76 @@ const ProductsManagement = () => {
           </table>
         </div>
       </div>
+
+      {/* Add Product Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Add New Product</h2>
+            {/* Add your form fields here */}
+            <div className="flex justify-end space-x-3 mt-4">
+              <button 
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-[#8c6d5c] text-white rounded"
+              >
+                Add Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Product Modal */}
+      {showViewModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Product Details</h2>
+            <div className="space-y-3">
+              <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-48 object-cover rounded" />
+              <p><strong>Name:</strong> {selectedProduct.name}</p>
+              <p><strong>ID:</strong> {selectedProduct.id}</p>
+              <p><strong>Category:</strong> {selectedProduct.category}</p>
+              <p><strong>Price:</strong> ₹{selectedProduct.price}</p>
+              <p><strong>Stock:</strong> {selectedProduct.stock}</p>
+              <p><strong>Status:</strong> {selectedProduct.status}</p>
+            </div>
+            <button 
+              onClick={() => setShowViewModal(false)}
+              className="mt-4 px-4 py-2 bg-[#8c6d5c] text-white rounded w-full"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Edit Product</h2>
+            {/* Add your edit form fields here */}
+            <div className="flex justify-end space-x-3 mt-4">
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-[#8c6d5c] text-white rounded"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>  
   );
 };
