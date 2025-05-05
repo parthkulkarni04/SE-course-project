@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaFilter, FaEye, FaDownload, FaTruck, FaCheck, FaExclamationCircle, FaPause, FaChartBar, FaCalendarAlt, FaRupeeSign, FaBoxOpen, FaClock, FaChartLine } from 'react-icons/fa';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const OrdersManagement = () => {
   const [activeStatus, setActiveStatus] = useState('all');
   const [dateRange, setDateRange] = useState('this-month');
+  const [mapKey, setMapKey] = useState(0); // Used to force remount of MapContainer
+
+  // Force remount of map on component mount to fix any React 18 related issues
+  useEffect(() => {
+    setMapKey(prev => prev + 1);
+  }, []);
 
   // Sample order data
   const orders = [
@@ -433,46 +440,37 @@ const OrdersManagement = () => {
       <div className="bg-white rounded-lg shadow-md p-5 mb-8">
         <h3 className="text-lg font-semibold text-[#5c4434] mb-3">Order Delivery Map</h3>
         <div className="h-96">
-          <ComposableMap
-            projectionConfig={{
-              scale: 800,
-              center: [83, 22]
-            }}
-            projection="geoMercator"
-            width={800}
-            height={400}
-            style={{ width: "100%", height: "100%" }}
+          <MapContainer 
+            key={mapKey}
+            center={[22, 82]} 
+            zoom={5} 
+            style={{ height: "100%", width: "100%" }}
+            scrollWheelZoom={false}
           >
-            <Geographies geography="https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json">
-              {({ geographies }) =>
-                geographies.map(geo => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="#f9f5f0"
-                    stroke="#c69f80"
-                    strokeWidth={0.5}
-                    style={{
-                      default: { outline: "none" },
-                      hover: { fill: "#f1e7dc", outline: "none" },
-                      pressed: { outline: "none" }
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
             {orderLocations.map(({ name, coordinates, orders, value }) => (
-              <Marker key={name} coordinates={coordinates}>
-                <circle 
-                  r={Math.max(4, value / 3)} 
-                  fill="#5c4434" 
-                  stroke="#fff" 
-                  strokeWidth={1} 
-                />
-                <title>{name}: {orders} orders</title>
-              </Marker>
+              <CircleMarker 
+                key={name}
+                center={[coordinates[1], coordinates[0]]}
+                radius={Math.max(6, value / 2)}
+                pathOptions={{
+                  fillColor: "#5c4434",
+                  color: "#ffffff",
+                  weight: 1,
+                  opacity: 1,
+                  fillOpacity: 0.8
+                }}
+              >
+                <Popup>
+                  <strong>{name}</strong><br />
+                  {orders} orders
+                </Popup>
+              </CircleMarker>
             ))}
-          </ComposableMap>
+          </MapContainer>
           <div className="flex justify-between mt-2 px-8 text-sm">
             <div className="flex items-center">
               <div className="w-3 h-3 rounded-full bg-[#5c4434] mr-2"></div>
@@ -482,8 +480,8 @@ const OrdersManagement = () => {
               <span className="text-[#8c7b6e]">Larger circles indicate higher order volume</span>
             </div>
           </div>
-                            </div>
-                        </div>
+        </div>
+      </div>
                         
       {/* Orders Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">

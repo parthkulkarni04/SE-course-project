@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import { FaCoffee, FaBoxOpen, FaRupeeSign, FaUsers, FaShoppingBag, FaChartLine, FaClipboardList, FaBoxes, FaWallet, FaArrowUp, FaArrowDown, FaCalendarAlt, FaClock, FaTruck, FaExclamationCircle, FaCheck, FaStar } from 'react-icons/fa';
 
 export default function Dashboard() {
   const [timeRange, setTimeRange] = useState('week');
+  const [mapKey, setMapKey] = useState(0);
+
+  // Force remount of map on component mount
+  useEffect(() => {
+    setMapKey(prev => prev + 1);
+  }, []);
 
   // Sample data for dashboard metrics
   const summaryMetrics = {
@@ -324,48 +331,48 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow-md p-4">
             <h3 className="text-lg font-semibold text-[#5c4434] mb-2">Customer Distribution</h3>
             <div className="h-80">
-              <ComposableMap
-                projectionConfig={{
-                  scale: 800,
-                  center: [83, 22]
-                }}
-                projection="geoMercator"
-                width={800}
-                height={400}
-                style={{ width: "100%", height: "100%" }}
+              <MapContainer
+                key={mapKey}
+                center={[22, 82]} 
+                zoom={5} 
+                style={{ height: "100%", width: "100%" }}
+                scrollWheelZoom={false}
               >
-                <Geographies geography="https://raw.githubusercontent.com/deldersveld/topojson/master/countries/india/india-states.json">
-                  {({ geographies }) =>
-                    geographies.map(geo => (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill="#f9f5f0"
-                        stroke="#c69f80"
-                        strokeWidth={0.5}
-                        style={{
-                          default: { outline: "none" },
-                          hover: { fill: "#f1e7dc", outline: "none" },
-                          pressed: { outline: "none" }
-                        }}
-                      />
-                    ))
-                  }
-                </Geographies>
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
                 {customerLocations.map(({ name, coordinates, customers, value }) => (
-                  <Marker key={name} coordinates={coordinates}>
-                    <circle 
-                      r={Math.max(4, value / 3)} 
-                      fill="#5c4434" 
-                      stroke="#fff" 
-                      strokeWidth={1} 
-                    />
-                    <title>{name}: {customers} customers</title>
-                  </Marker>
+                  <CircleMarker 
+                    key={name}
+                    center={[coordinates[1], coordinates[0]]}
+                    radius={Math.max(6, value / 2)}
+                    pathOptions={{
+                      fillColor: "#5c4434",
+                      color: "#ffffff",
+                      weight: 1,
+                      opacity: 1,
+                      fillOpacity: 0.8
+                    }}
+                  >
+                    <Popup>
+                      <strong>{name}</strong><br />
+                      {customers} customers
+                    </Popup>
+                  </CircleMarker>
                 ))}
-              </ComposableMap>
+              </MapContainer>
+              <div className="flex justify-between mt-2 px-8 text-sm">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-[#5c4434] mr-2"></div>
+                  <span className="text-[#5c4434]">Customer locations</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-[#8c7b6e]">Larger circles indicate higher customer count</span>
+                </div>
+              </div>
             </div>
-      </div>
+          </div>
 
           {/* Top Selling Products */}
           <div className="bg-white rounded-lg shadow-md p-4">
@@ -473,6 +480,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      </div>
+    </div>
   );
 }
